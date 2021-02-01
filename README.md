@@ -11,14 +11,14 @@ Attribute Definition File consists of 4 main parts: device name, General Attribu
 ### labels allowed in Attribute definition File:
 1. *devname* = Device name (string)
 2. *attribute-type*= attribute type (string) -- can be GA, RT, or CA
-     _for GA and CA:
-     _*label* = label of attribute (string)
-     _*key* = character to assosciate with attribute (char) 
-     _*output-format* = representation format (can be hex, string, int)
-     _*size* = size of field for attribute (string converted to integer)
-     _*group*= how many bytes should tool group in representation (e.g., group sequence number by 2 bytes) (string converted to integer)
-     _*location*= start location of attribute within frame (string converted to integer)
-     _*delimiter*= seperator between group of bytes (e.g., ':' for mac-addrress and '.' for IPV4 addresses, etc.)
+    - for GA and CA:
+     - *label* = label of attribute (string)
+     - *key* = character to assosciate with attribute (char) 
+     - *output-format* = representation format (can be hex, string, int)
+     - *size* = size of field for attribute (string converted to integer)
+     - *group*= how many bytes should tool group in representation (e.g., group sequence number by 2 bytes) (string converted to integer)
+     - *location*= start location of attribute within frame (string converted to integer)
+     - *delimiter*= seperator between group of bytes (e.g., ':' for mac-addrress and '.' for IPV4 addresses, etc.)
        _Only for CA (Conditional attributes)
         _*condition-key*= key of previously defined attribute
         _*value condition should meet* (string converted to byte 0-255) <- repeated x number of times equal to size*grouping of attribute condition must meet
