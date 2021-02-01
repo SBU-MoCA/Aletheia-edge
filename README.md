@@ -4,6 +4,12 @@
 
 Aletheia on the edge relies on using Attribute Definition File which details all information of interest to the user to extract. Aletheia supports two extraction ways: live or from pre-stored pcap file. To use live SAE, please define #LIVE_SAE in main file, for pcap file, please define #FILE_SAE and have pcap file stored in the same directory with name log.pcap
 
+After selecting appropriate usage, please run the following commands to start the code:
+```
+make
+./aletheia-edge
+```
+
 ## Attribute Definition File (ADF)
 
 Attribute Definition File consists of 4 main parts: device name, General Attribute (GA), Conditional Attribute (CA), and radiotap attributes (RT).
