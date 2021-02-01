@@ -19,12 +19,12 @@ Attribute Definition File consists of 4 main parts: device name, General Attribu
      - *group*= how many bytes should tool group in representation (e.g., group sequence number by 2 bytes) (string converted to integer)
      - *location*= start location of attribute within frame (string converted to integer)
      - *delimiter*= seperator between group of bytes (e.g., ':' for mac-addrress and '.' for IPV4 addresses, etc.)
-       _Only for CA (Conditional attributes)
-        _*condition-key*= key of previously defined attribute
-        _*value condition should meet* (string converted to byte 0-255) <- repeated x number of times equal to size*grouping of attribute condition must meet
-    _for RT:
-     _*val*= bit of defined radiotap field user is interested in (please refer to http://www.radiotap.org/fields/defined) for full list
-     _NOTE: for bit 1 user has to add masking for flags(e.g., val=1=2) adds interest in radiotap bit 2 (RX_FLAGS) with masking of 0x02 to extract only preamble value
+     - Only for CA (Conditional attributes)
+      - *condition-key*= key of previously defined attribute
+      - *value condition should meet* (string converted to byte 0-255) <- repeated x number of times equal to size*grouping of attribute condition must meet
+    - for RT:
+     - *val*= bit of defined radiotap field user is interested in (please refer to http://www.radiotap.org/fields/defined) for full list
+     - NOTE: for bit 1 user has to add masking for flags(e.g., val=1=2) adds interest in radiotap bit 2 (RX_FLAGS) with masking of 0x02 to extract only preamble value
      
 ## contact Us
 
