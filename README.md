@@ -1,4 +1,4 @@
-#Aletheia-edge
+# Aletheia-edge
 
 ## Getting Started
 
@@ -26,6 +26,6 @@ Attribute Definition File consists of 4 main parts: device name, General Attribu
      _*val*= bit of defined radiotap field user is interested in (please refer to http://www.radiotap.org/fields/defined) for full list
      _NOTE: for bit 1 user has to add masking for flags(e.g., val=1=2) adds interest in radiotap bit 2 (RX_FLAGS) with masking of 0x02 to extract only preamble value
      
-##contact Us
+## contact Us
 
 For any questions or issues with the system, please contact mohammed.elbadry@stonybrook.edu
