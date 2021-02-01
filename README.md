@@ -8,7 +8,7 @@ Aletheia on the edge relies on using Attribute Definition File which details all
 
 Attribute Definition File consists of 4 main parts: device name, General Attribute (GA), Conditional Attribute (CA), and radiotap attributes (RT).
 
-### labels allowed in Attribute definition File:
+### labels allowed within ADF:
 1. *devname* = Device name (string)
 2. *attribute-type*= attribute type (string) -- can be GA, RT, or CA
     - for GA and CA:
@@ -26,6 +26,6 @@ Attribute Definition File consists of 4 main parts: device name, General Attribu
      - *val*= bit of defined radiotap field user is interested in (please refer to http://www.radiotap.org/fields/defined) for full list
      - NOTE: for bit 1 user has to add masking for flags(e.g., val=1=2) adds interest in radiotap bit 2 (RX_FLAGS) with masking of 0x02 to extract only preamble value
      
-## contact Us
+## Contact Us
 
 For any questions or issues with the system, please contact mohammed.elbadry@stonybrook.edu
