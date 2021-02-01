@@ -1,3 +1,3 @@
 prep:
 	gcc -c *.c -o radio.o
-	g++ *.cpp *.o -lpcap
+	g++ *.cpp *.o -lpcap -o aletheia-edge
