@@ -1,3 +1,26 @@
+/*
+* Copyright (c) 2021, Mohammed Elbadry
+*
+*
+* This file is part of Aletheia (Medium Analysis Tool on Edge)
+*
+* Aletheia is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 
+* 4.0 International License.
+* 
+* You should have received a copy of the license along with this
+* work. If not, see <http://creativecommons.org/licenses/by-nc-sa/4.0/>.
+* 
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+* IN THE SOFTWARE. 
+* 
+*/
+
 #include "att_consume.h"
 
 
@@ -17,13 +40,13 @@ att_consume::~att_consume()
 
 }
 /**
- * @brief      { function_description }
+ * @brief      Extract Conditional Attributes (CA) defined by user 
  *
  * @param[in]  header    The header
  * @param[in]  packet    The packet
- * @param      ca_attr   The ca attribute
- * @param      attr_map  The attribute map
- * @param      output    The output
+ * @param      ca_attr   The CA list
+ * @param      attr_map  Map to map CA to list of conditions
+ * @param      output    The output file to store extracted attributes
  */
 void att_consume::process_ca(const struct pcap_pkthdr *header,
                      const u_char * packet, vector<attribute>& ca_attr, map<char, attribute>& attr_map, FILE* output)
@@ -84,12 +107,12 @@ void att_consume::process_ca(const struct pcap_pkthdr *header,
 }
 
 /**
- * @brief      { function_description }
+ * @brief      Extract General Attributes (GA) defined by user
  *
  * @param[in]  header   The header
  * @param[in]  packet   The packet
- * @param      ga_attr  The ga attribute
- * @param      output   The output
+ * @param[in]  ga_attr  The GA list
+ * @param[in]  output   The output
  */
 void att_consume::process_ga(const struct pcap_pkthdr *header,const u_char * packet, vector<attribute>& ga_attr, FILE* output)
 {
@@ -105,13 +128,13 @@ void att_consume::process_ga(const struct pcap_pkthdr *header,const u_char * pac
 }
 
 /**
- * @brief      { function_description }
+ * @brief      Extract Radiotap Attributes (RT) defined by user
  *
- * @param[in]  header    The header
- * @param[in]  packet    The packet
- * @param[in]  rt_attr   The right attribute
- * @param[in]  rt_masks  The right masks
- * @param      output    The output
+ * @param[in]  header      The header
+ * @param[in]  packet      The packet
+ * @param[in]  rt_attr     The radiotap attribute list to extract
+ * @param[in]  flags_mask  mask for radiotap flags.
+ * @param[in]  output      The output
  */
 void att_consume::process_rt(const struct pcap_pkthdr *header,
                      const u_char * packet, vector<int> rt_attr, char flags_mask, FILE* output)
