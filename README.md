@@ -11,7 +11,7 @@ Attribute Definition File consists of 4 main parts: device name, General Attribu
 ### labels allowed in Attribute definition File:
 1. *devname* = Device name (string)
 2. *attribute-type*= attribute type (string) -- can be GA, RT, or CA
-    _for GA and CA:
+     _for GA and CA:
      _*label* = label of attribute (string)
      _*key* = character to assosciate with attribute (char) 
      _*output-format* = representation format (can be hex, string, int)
