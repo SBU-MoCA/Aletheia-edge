@@ -1,7 +1,7 @@
 # Aletheia-edge
 
 ## Introduction
-Aletheia is a tool built for distributed low-end robust wireless R&D platforms (e.g., raspberry pis, jetson, etc.). Aletheia enables its users to offline/live selective log data of interest on low end but robust hardware for wireless research/development.
+Aletheia is a tool built for distributed low-end robust wireless R&D platforms (e.g., raspberry pis, jetson, etc.). Aletheia enables its users to offline/live selectively log data of interest on low-end robust hardware for wireless research/development.
 
 ## Platforms Tested
 1. ARM platforms (pi3/pi4/pi2/jetson)
