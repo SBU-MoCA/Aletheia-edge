@@ -20,7 +20,7 @@ Aletheia is a tool built for distributed low-end robust wireless R&D platforms (
 - g++
 - libpcap-dev
 
-### Live Capture (Please ensure you are running in sude mode)
+### Live Capture (Please ensure you are running in sudo mode)
 
 - It is prefer to set radio to monitor mode using the following commands:
 ```
