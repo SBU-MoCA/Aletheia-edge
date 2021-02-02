@@ -1,4 +1,4 @@
-output_viewer:
+OUTPUT_VIEWER:
 	gcc -c *.c -o radio.o
 	g++ *.cpp *.o -lpcap -DOUTPUT_VIEWER -o aletheia-viewer
 LIVE_SAE:
