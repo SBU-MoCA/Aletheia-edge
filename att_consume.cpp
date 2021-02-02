@@ -61,50 +61,55 @@ void att_consume::process_ca(const struct pcap_pkthdr *header,
   struct ieee80211_radiotap_header* rt;
   rt = (struct ieee80211_radiotap_header*) packet;
   const u_char *ptr = packet + rt->it_len;
-    /* Iterate over all conditional attributes */
+  /* Iterate over all conditional attributes */
   while (i < ca_attr.size())
   {
     attr_it = ca_attr[i];
-        /* if attribute location is beyond length of frame, skip checking conditions */
+    /* if attribute location is beyond length of frame, skip checking conditions */
     if ((attr_it.size * attr_it.attribute_grouping) + attr_it.location > header->len)
     {
       continue;
     }
     pass = 1;
     j = 0;
-        /* iterate over all conditions per conditional attribute */
+    
+    /* iterate over all conditions per conditional attribute */
     while (j < attr_it.conditions_keys.size())
     {
       key = attr_it.conditions_keys[j];
       attr_cond = attr_map[key];
       k = 0;
-            /* compare byte by byte per condition */
+      
+      /* compare byte by byte per condition */
       while (k < attr_cond.size * attr_cond.attribute_grouping)
       {
         tmp_char = *(ptr + attr_cond.location + k) & attr_cond.masking;
-                //printf("Comparing %d with %d", tmp_char, attr_it.vals[j][k]);              
+        /* If condition is not met */
         if (tmp_char != attr_it.vals[j][k])
         {
           pass = 0;
           break;
         }
+        /* condition met, move to next condition and check */
         k++;
       }
+
       if (pass != 1)
+      {
         break;
+      }
       j++;
     }
-        /* all conditions for CA to be written have passed */
+    
+    /* all conditions for CA to be written have passed */
     if (pass == 1)
     {
-            //printf("Condition passed! \n");
-            fprintf(output, "%c",ca_attr[i].key);/* key indicating CA condition has been recorded */
       fwrite(ptr + ca_attr[i].location, ca_attr[i].attribute_grouping, ca_attr[i].size, output);
     }
     i++;
   }
-
 }
+
 
 /**
  * @brief      Extract General Attributes (GA) defined by user
@@ -153,51 +158,101 @@ void att_consume::process_rt(const struct pcap_pkthdr *header,
 
   while (!ret) 
   {
+
     ret = ieee80211_radiotap_iterator_next(&iterator);
     tmp = iterator.this_arg_index;
-    if (ret)
-     break;
-   if (find(begin(rt_attr), end(rt_attr), tmp) == end(rt_attr))
+    /*if value is not requested in ADF, skip it */
+    if (find(begin(rt_attr), end(rt_attr), tmp) == end(rt_attr))
+    {
      continue;
+    }
 
-   while (rt_attr[rtc] < iterator.this_arg_index)
-   {
+    /*If requested radiotap header was not available add delimiter and move on */
+    while (rt_attr[rtc] < iterator.this_arg_index)
+    {
+      rtc++;
+      fprintf(output, "|");
+    } 
+
+    switch (iterator.this_arg_index) 
+    {
+      case IEEE80211_RADIOTAP_TSFT:
+        fwrite(iterator.this_arg, 1, 8, output); /* TSFT is 64 bits */
+        break;
+      case IEEE80211_RADIOTAP_FLAGS:
+        tmp_char = *iterator.this_arg & flags_mask; 
+        fwrite(&tmp_char, 1, 1, output); /* flags is 8 bits */
+        break;
+      case IEEE80211_RADIOTAP_RATE:
+        rt = (uint8_t) *iterator.this_arg; /* in 500kbps */
+        fwrite(iterator.this_arg, 1, 1, output); /* Rate is 8 bits */
+        break;
+      case IEEE80211_RADIOTAP_CHANNEL:
+        fwrite(iterator.this_arg, 1, 4, output); /* channel is 32 bits  u16 freq, u16 flags*/
+        break;
+      case IEEE80211_RADIOTAP_FHSS:
+        fwrite(iterator.this_arg, 1, 2, output); /* FHSS is 16 bits u8 hop set, u8 hop pattern*/      
+        break;
+      case IEEE80211_RADIOTAP_DBM_ANTSIGNAL:
+        fwrite(iterator.this_arg, 1, 1, output); /* antisignal is 8 bits */      
+        break;
+      case IEEE80211_RADIOTAP_DBM_ANTNOISE:
+        fwrite(iterator.this_arg, 1, 1, output); /* antinoise is 8 bits*/
+        break;
+      case IEEE80211_RADIOTAP_LOCK_QUALITY:
+        fwrite(iterator.this_arg, 1, 2, output); /* Lock Quality is 16 bits */
+        break;
+      case IEEE80211_RADIOTAP_TX_ATTENUATION:
+        fwrite(iterator.this_arg, 1, 2, output); /* TX attentuation is 16 bits */
+        break;
+      case IEEE80211_RADIOTAP_DB_TX_ATTENUATION:
+        fwrite(iterator.this_arg, 1, 2, output); /* TX db attentuation is 16 bits */
+        break;
+      case IEEE80211_RADIOTAP_DBM_TX_POWER:
+        fwrite(iterator.this_arg, 1, 1, output); /* TX dbm power is 8 bits */
+        break;
+      case IEEE80211_RADIOTAP_ANTENNA:
+        fwrite(iterator.this_arg, 1, 1, output); /* Antenna is 8 bits */
+        break;    
+      case IEEE80211_RADIOTAP_DBM_ANTSIGNAL:
+        fwrite(iterator.this_arg, 1, 1, output); /* DBM ANTSIGNAL is 8 bits */
+        break;      
+      case IEEE80211_RADIOTAP_DBM_ANTNOISE:
+        fwrite(iterator.this_arg, 1, 1, output); /* DBM ANTINOISE is 8 bits */
+        break;
+      case IEEE80211_RADIOTAP_RX_FLAGS:
+        fwrite(iterator.this_arg, 1, 2, output); /* RX flags is 16 bits */
+        break;
+      case IEEE80211_RADIOTAP_TX_FLAGS:
+        fwrite(iterator.this_arg, 1, 2, output); /* TX flags is 16 bits */
+        break;
+      case IEEE80211_RADIOTAP_RTS_RETRIES:
+        fwrite(iterator.this_arg, 1, 1, output); /* RTS retries is 8 bits */
+        break;
+      case IEEE80211_RADIOTAP_DATA_RETRIES:
+        fwrite(iterator.this_arg, 1, 1, output); /* Data retries is 8 bits */
+        break;
+      case IEEE80211_RADIOTAP_MCS:
+        fwrite(iterator.this_arg, 1, 3, output); /* MCS is 24 bits u8 known, u8 flags, u8 mcs */
+        break;
+      case IEEE80211_RADIOTAP_AMPDU_STATUS:
+        fwrite(iterator.this_arg, 1, 8, output); /* AMPDU status is 64 bits, u32 reference, u16 flag, u8 delimiter, u8 reserved */
+        break;
+      case IEEE80211_RADIOTAP_VHT:
+        fwrite(iterator.this_arg, 1, 12, output); /* VHT is 96 bits u16 known, u8 band, u8 mcs_ncss[4], u8 coding, u8 group_id, u16 partial_aid */
+        break;
+      case IEEE80211_RADIOTAP_TIMESTAMP:
+        fwrite(iterator.this_arg, 1, 12, output); /* timestamp is 96 bits u64 timestamp, u16 accuracy, u8 unit/position, u8 flags */
+        break;
+      default:
+        break;
+    }
     rtc++;
-    fprintf(output, "|");
+    fprintf(output, "|");  
   }
 
-        /* TODO: add rest of headers */
-  switch (iterator.this_arg_index) 
+  while (rtc++ < rt_attr.size())
   {
-    case IEEE80211_RADIOTAP_TSFT:
-                fwrite(iterator.this_arg, 1, 8, output); /* TSFT is 64 bits */
-    break;
-    case IEEE80211_RADIOTAP_FLAGS:
-    tmp_char = *iterator.this_arg & flags_mask; 
-                fwrite(&tmp_char, 1, 1, output); /* flags is 8 bits */
-    break;
-    case IEEE80211_RADIOTAP_RATE:
-            	rt = (uint8_t) *iterator.this_arg; /* in 500kbps */
-                fwrite(iterator.this_arg, 1, 1, output); /* Rate is 8 bits */
-    break;
-    case IEEE80211_RADIOTAP_MCS:
-                fwrite(iterator.this_arg, 1, 3, output); /* MCS is 24 bits */
-    break;
-    case IEEE80211_RADIOTAP_DBM_ANTSIGNAL:
-                fwrite(iterator.this_arg, 1, 1, output); /* DBM ANTSIGNAL is 8 bits */
-    break;
-    case IEEE80211_RADIOTAP_DBM_ANTNOISE:
-                fwrite(iterator.this_arg, 1, 1, output); /* DBM ANTSIGNAL is 8 bits */
-    break;
-    default:
-    break;
-
-  }
-  rtc++;
-  fprintf(output, "|");  
-}
-while (rtc++ < rt_attr.size())
-{
-  fprintf(output, "|");
-}	
+    fprintf(output, "|");
+  }	
 }
