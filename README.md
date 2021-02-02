@@ -1,30 +1,42 @@
 # Aletheia-edge
 
 ## Introduction
-Aletheia uses a pre-defined Attributes Definition File (ADF) to know what the user is interested in extracting per-frame. The ADF provides instructions to the Edge Monitor that runs on low-cost commodity hardware to extract all information of interest to the user; the Edge Monitor supports extracting generic fields that exist in every frame (e.g., MAC
-address, TSFT, etc.), and complex conditional attributes (e.g., protocol version of SMTP packets). Upon the end of logging duration, a Filtered Log File is created that contains all attributes extracted from frames received and information necessary for the Analyzer to understand how to parse the generated file.
+Aletheia is a tool built for distributed low-end robust wireless R&D platforms (e.g., raspberry pis, jetson, etc.). Aletheia enables its users to offline/live selective log data of interest on low end but robust hardware for wireless research/development.
 
 ## Platforms Tested
 1. ARM platforms (pi3/pi4/pi2/jetson)
 2. x86 and x64 linux Desktop/laptops
 
-## Chipsets validated
-1. AR9271 
-2. AR9170
-3. Atheros TL-WN722N
-4. Ralink RT5372
-5. Realtek RTL8192CU
-6. Realtek RTL8188CUS
+## Chipsets (Dongles) Validated
+1. AR9271 (Alfa AWUS036NHA)
+2. Atheros TL-WN722N
+3. Ralink RT5372 (EASTECH Ralink RT5370)
+4. Realtek RTL8192CU (APMIX 300Mbps Realtek Rtl8192Cu and Mini Realtek RTL8188CU)
 
 ## Getting Started
 
-Aletheia on the edge relies on using Attribute Definition File which details all information of interest to the user to extract. Aletheia supports two extraction ways: live or from pre-stored pcap file. To use live SAE, please define #LIVE_SAE in main file, for pcap file, please define #FILE_SAE and have pcap file stored in the same directory with name log.pcap
+### Live Capture (Please ensure you are running in sude mode)
+To build Aletheia-edge binary and use live-capture mode, please run the following commands:
+```
+make LIVE_SAE
+./aletheia-edge-live
+```
 
-After selecting appropriate usage, please run the following commands to start the code:
+### File Capture (skip if already done live capture instead)
+To process already captured log and generate output.txt with selective filtering. Ensure captured log is in the same directory and named log.pcap, then run the following commands:
 ```
-make
-./aletheia-edge
+make FILE_SAE
+./aletheia-edge-file
 ```
+
+### View Output of filtered log (ensure file permissions are set correctly)
+To view log in console to verify its correctness, please run the following commands to build and run the code:
+```
+make OUTPUT_VIEWER
+./aletheia-viewer
+```
+
+output of captured data is printed on console.
 
 ## Attribute Definition File (ADF)
 
