@@ -15,7 +15,7 @@ Aletheia is a tool built for distributed low-end robust wireless R&D platforms (
 
 ## Getting Started
 
-### pre-requisites
+### Requirements
 - gcc
 - g++
 - libpcap-dev
@@ -30,7 +30,7 @@ sudo ifconfig devname up
 ```
 where 'devname' is the device's name and can be obtained by running command (iw dev) to get list of all possible devices
 
--Please ensure name of the device is correctly placed in ADF.txt before running and building the code.
+- Please ensure name of the device is correctly placed in ADF.txt before running and building the code.
 
 To build Aletheia-edge binary and use live-capture mode, please run the following commands:
 ```
