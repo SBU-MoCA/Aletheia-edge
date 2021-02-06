@@ -31,7 +31,7 @@ sudo ifconfig devname up
 where 'devname' is the device's name and can be obtained by running command (iw dev) to get list of all possible devices
 
 - Please ensure name of the device is correctly placed in ADF.txt before running and building the code.
-- Please copy appropriate sample ADF text file (for AR9271 please use ar9207-monitor.txt for this begginning)
+- Please copy appropriate sample ADF text file (for AR9271 please use ar9207-monitor.txt for this beginning)
 
 To build Aletheia-edge binary and use live-capture mode, please run the following commands:
 ```
