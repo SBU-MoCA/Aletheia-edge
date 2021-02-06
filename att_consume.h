@@ -45,9 +45,9 @@ public:
 	virtual ~att_consume();
   
 	void process_rt(const struct pcap_pkthdr *header,
-                     const u_char * packet, vector<int> rt_attr, char flags_mask, FILE* output);
+                     const u_char * packet, vector<int> rt_attr, char flags_mask, struct ieee80211_radiotap_iterator& iterator, ofstream& output);
 	void process_ga(const struct pcap_pkthdr *header,
-                     const u_char * packet, vector<attribute>& ga_attr, FILE* output);
+                     const u_char * packet, vector<attribute>& ga_attr, int offset, ofstream& output);
 	void process_ca(const struct pcap_pkthdr *header,
-                     const u_char * packet, vector<attribute>& ca_attr, map<char, attribute>& attr_map, FILE* output);
+                     const u_char * packet, vector<attribute>& ca_attr, map<char, attribute>& attr_map, int offset, ofstream& output);
 };

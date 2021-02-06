@@ -27,11 +27,6 @@
 #include <pcap.h>
 #include <netinet/in.h>
 #include <net/ethernet.h>
-
-
-#define LIVE_SAE
-
-
 #include "parser.h"
 #if defined(LIVE_SAE) || defined(FILE_SAE)
 #include "att_consume.h"
@@ -44,8 +39,8 @@ pcap_t *handle;
 #if defined(LIVE_SAE) || defined(FILE_SAE)
 att_consume attc;
 #endif
-FILE *output;
-
+ofstream output;
+bool stop = false;
 
 /**
  * @brief      View Output of output.txt
@@ -53,24 +48,53 @@ FILE *output;
 #ifdef OUTPUT_VIEWER
 void Parser::view_output()
 {
-  ifstream infile;
-  infile.open("output.txt");
-  char line[256];
+  ifstream infile("output.bin", ios::binary);  
+  unsigned char *line;
+  char buf[2000];
   int lc;
-  char buf[300];
+  char bf[3];
+  int count;
   long long unsigned int tsft;
+  vector<unsigned char> buffer;
+  int buf_cnt;
   uint8_t rt;
   uint32_t size;
+  uint32_t index;
   char flags;
+  char key;
+  attribute attr;
   int i;
-  while (infile.getline(line, sizeof(line)))
+
+  do
   {
-    lc = 0;
+    infile.read(buf, 20);
+    count = infile.gcount();
+    buffer.insert(buffer.end(), buf, buf + count);
+    buf_cnt = 0;
+    while (buf_cnt < buffer.size())
+    {
+      if(buffer[buf_cnt] == '\t' && buffer[buf_cnt+1] == '\n')
+      {
+        buf_cnt++;
+        break;
+      }
+      buf_cnt++;
+    }
+    if (buf_cnt != buffer.size() && !infile.eof())
+    {
+      lc = 0;
+      line = &buffer[0];
+    }
+    else
+    {
+      continue;
+    }
     memcpy(&size, &line[lc], 4);
     lc += 4;
+    cout << "Size: " << size << endl;
     /* parse Radiotap attributes */
     for (int c : rt_attr)
-    {
+    {  
       if(line[lc] == '|')
       {
         lc++;
@@ -95,17 +119,25 @@ void Parser::view_output()
           lc += 1 + 1;
           printf("Rate: %u\n", rt);
         break;
+        case 19:
+          memcpy(&bf, &line[lc], 3);
+          printf(" MCS vals are %d, %d, and %d", bf[0], bf[1], bf[2]);
+        break;
         default:
         break;
       }
     }
+
     while(line[lc] == '|')
     {
+      printf("HERE\n");
       lc++;   
     }
+
+    /* for GA attributes */
     for (attribute a : GA_attributes)
-    {   
-      cout << a.label << ": ";
+    {
+      printf("%s:", a.label.c_str());
       for (i = 0; i < a.size; i++)
       {
         if(i != 0)
@@ -120,14 +152,59 @@ void Parser::view_output()
             printf("%02x", ((u_char) line[lc++]) & a.masking);
             return;
           }
-          printf("%02x", ((u_char) line[lc++]) & a.masking);
-          
+          printf("%02x", ((u_char) line[lc++]) & a.masking);          
+        }
+        else if (strcmp(a.attribute_format.c_str(), "int") == 0)
+        {
+          int cnt = 0;
+          int cc = 0;
+          while (cc < a.attribute_grouping)
+          {
+            cc++;
+            cnt = cnt << 8  + ((u_char) line[lc++]);
+          }
+          printf("%d", cnt);
         }
       }
       printf("\n");
     }
+
+    /* For CA attributes */
+    lc++;
+    while(lc < buf_cnt)
+    {
+      key = line[lc++];      
+      if (parser.attr_map.find(key) == parser.attr_map.end())
+        continue;
+      attr = parser.attr_map[key];
+      printf("%s:", attr.label.c_str());
+      
+      for (i = 0; i < attr.size; i++)
+      {
+        if(i != 0)
+        {
+          printf("%c", attr.delimiter);
+        }
+        if(strcmp(attr.attribute_format.c_str(), "hex") == 0)
+        {
+          printf("%02x", ((u_char) line[lc++]) & attr.masking);          
+        }
+        else if (strcmp(attr.attribute_format.c_str(), "int") == 0)
+        {
+          int cnt = 0;
+          int cc = 0;
+          cnt = ((u_char) line[lc + i]);
+          printf("%d", cnt);
+        }
+      }
+      printf("\n");    
+      //lc += parser.attr_map[key].attribute_grouping * parser.attr_map[key].size;    
+    }
+
     printf("\n");
-  }
+    buffer.erase(buffer.begin(), buffer.begin() + buf_cnt + 1);
+  } while(infile);
+  infile.close();
 }
 #endif
 
@@ -140,11 +217,10 @@ void Parser::view_output()
 void signalHandler (int signum)
 {
   cout <<"Signal called " << endl;
-  fclose(output);
-  #ifdef LIVE_SAE
-    pcap_close(handle);
-  #endif
-  exit(signum);
+  //fclose(output);
+  stop = true;
+  
+  //exit(signum);
 }
 
 /**
@@ -155,18 +231,48 @@ void signalHandler (int signum)
  * @param[in]  packet   The packet
  */
 #if defined(LIVE_SAE) || defined(FILE_SAE)
-void my_callback(u_char *bits, const struct pcap_pkthdr* pkthdr, const u_char*packet)
+void my_callback(u_char *bits, const struct pcap_pkthdr* pkthdr, const u_char* packet)
 {
-    static int count = 1;
-    if(pkthdr->len > 2000)
-    {
-        /* drop corrutped frame */
-        return;
-    }
-    attc.process_rt(pkthdr, packet, parser.rt_attr, parser.flags_mask, output);        
-    attc.process_ga(pkthdr, packet, parser.GA_attributes, output);
-    attc.process_ca(pkthdr, packet, parser.CA_attributes, parser.attr_map, output);
-    fprintf(output, "\t\n");
+  static int count = 1;
+  struct ieee80211_radiotap_header* rt_hdr;
+  struct ieee80211_radiotap_header* rt;
+  struct ieee80211_radiotap_iterator iterator;  
+  int ret;
+  int offset = 0;
+
+  rt = (struct ieee80211_radiotap_header*) packet;
+  /* Drop frames malformed above 2000 bytes */
+  if (pkthdr->len > 2000)
+  {
+      /* drop corrutped frame */
+      return;
+  }
+
+  /* write down size of frame */
+  output.write(reinterpret_cast<const char*>(&pkthdr->len), 4);
+
+  /* check if frame has radiotap headers before LP/network headers */
+  rt_hdr = (struct ieee80211_radiotap_header*) packet;
+  ret = ieee80211_radiotap_iterator_init(&iterator, rt_hdr, pkthdr->len, NULL);
+
+  /* If frame has radiotap headers, set offset and process radiotap fields in ADF */
+  if (ret != -EINVAL)
+  {    
+    attc.process_rt(pkthdr, packet, parser.rt_attr, parser.flags_mask, iterator, output);
+    offset = pkthdr->len;
+  }
+    
+  attc.process_ga(pkthdr, packet, parser.GA_attributes, offset, output);
+  attc.process_ca(pkthdr, packet, parser.CA_attributes, parser.attr_map, offset, output);
+  output.write("\t\n", 2);
+  if (stop)
+  {
+    printf("Closing\n");
+    output.close();
+    pcap_close(handle);
+    exit(0);
+  }
+    /*fprintf(output, "\t\n");*/
 }
 #endif
 
@@ -190,8 +296,9 @@ int main(int argc, char *argv[])
     parser.view_output();
   #else
     /* doing either live or file capture */
-    signal(SIGINT, signalHandler);    
-    output = fopen("output.txt", "w");
+    signal(SIGINT, signalHandler); 
+    output = ofstream("output.bin", ios::out | ios::binary);
+
     /* display information parsed from ADF */
     cout << "Device name is: " << parser.devname.c_str() <<endl;
     cout << "RT Attributes are = " << parser.rt_attr.size() << endl;
@@ -200,6 +307,7 @@ int main(int argc, char *argv[])
     {
       cout << j <<endl;
     }
+
     cout <<"GA Attributes total = " << parser.gac <<endl;
     for (i = 0; i < parser.gac; i++)
     {

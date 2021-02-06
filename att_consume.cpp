@@ -3,7 +3,7 @@
 *
 *
 * This file is part of Aletheia (Medium Analysis Tool on Edge)
-*
+*  
 * Aletheia is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 
 * 4.0 International License.
 * 
@@ -48,8 +48,7 @@ att_consume::~att_consume()
  * @param      attr_map  Map to map CA to list of conditions
  * @param      output    The output file to store extracted attributes
  */
-void att_consume::process_ca(const struct pcap_pkthdr *header,
- const u_char * packet, vector<attribute>& ca_attr, map<char, attribute>& attr_map, FILE* output)
+void att_consume::process_ca(const struct pcap_pkthdr *header, const u_char * packet, vector<attribute>& ca_attr, map<char, attribute>& attr_map, int offset, ofstream& output)
 {
   int i = 0;
   int j = 0;
@@ -57,10 +56,10 @@ void att_consume::process_ca(const struct pcap_pkthdr *header,
   attribute tmp_attr, attr_it, attr_cond;
   char key;
   int pass;
-  char tmp_char;
-  struct ieee80211_radiotap_header* rt;
-  rt = (struct ieee80211_radiotap_header*) packet;
-  const u_char *ptr = packet + rt->it_len;
+  int ret;
+  char tmp_char;  
+ 
+  const u_char *ptr = packet + offset;
   /* Iterate over all conditional attributes */
   while (i < ca_attr.size())
   {
@@ -100,11 +99,15 @@ void att_consume::process_ca(const struct pcap_pkthdr *header,
       }
       j++;
     }
-    
+    //fprintf(output, "\n");
+
     /* all conditions for CA to be written have passed */
     if (pass == 1)
     {
-      fwrite(ptr + ca_attr[i].location, ca_attr[i].attribute_grouping, ca_attr[i].size, output);
+      //fwrite(&ca_attr[i].key, 1, 1, output);
+      output.write(&ca_attr[i].key, 1);
+      output.write(reinterpret_cast<const char*>(ptr + ca_attr[i].location), ca_attr[i].attribute_grouping * ca_attr[i].size);
+      //fwrite(ptr + ca_attr[i].location, ca_attr[i].attribute_grouping, ca_attr[i].size, output);
     }
     i++;
   }
@@ -119,16 +122,17 @@ void att_consume::process_ca(const struct pcap_pkthdr *header,
  * @param[in]  ga_attr  The GA list
  * @param[in]  output   The output
  */
-void att_consume::process_ga(const struct pcap_pkthdr *header,const u_char * packet, vector<attribute>& ga_attr, FILE* output)
+void att_consume::process_ga(const struct pcap_pkthdr *header,
+  const u_char * packet, vector<attribute>& ga_attr, int offset, ofstream& output)
 {
   int i;
-  struct ieee80211_radiotap_header* rt;
-  char buffer[200];
-  rt = (struct ieee80211_radiotap_header*) packet;
-  const u_char *ptr = packet + rt->it_len;
+  char buffer[200];  
+  const u_char *ptr = packet + offset;
+  
   for (attribute a : ga_attr)
   {
-    fwrite(ptr + a.location, a.attribute_grouping, a.size, output);        
+    //fwrite(ptr + a.location, a.attribute_grouping, a.size, output);
+    output.write(reinterpret_cast<const char*>(ptr + a.location), a.attribute_grouping * a.size);
   }
 }
 
@@ -142,117 +146,109 @@ void att_consume::process_ga(const struct pcap_pkthdr *header,const u_char * pac
  * @param[in]  output      The output
  */
 void att_consume::process_rt(const struct pcap_pkthdr *header,
- const u_char * packet, vector<int> rt_attr, char flags_mask, FILE* output)
+ const u_char * packet, vector<int> rt_attr, char flags_mask, struct ieee80211_radiotap_iterator& iterator, ofstream& output)
 {
-  struct ieee80211_radiotap_iterator iterator;
-  struct ieee80211_radiotap_header* rt_hdr;
+ 
   int ret;
   int tmp;
   uint8_t rt;
   char tmp_char;
   int rtc = 0;
   char buffer[200];
-  rt_hdr = (struct ieee80211_radiotap_header*) packet;
-  ret = ieee80211_radiotap_iterator_init(&iterator, rt_hdr, header->len, NULL);
-  fwrite(&header->len, 4, 1, output);
-
-  while (!ret) 
+  do
   {
-
     ret = ieee80211_radiotap_iterator_next(&iterator);
     tmp = iterator.this_arg_index;
-    /*if value is not requested in ADF, skip it */
+    /* if value is not requested in ADF, skip it */
     if (find(begin(rt_attr), end(rt_attr), tmp) == end(rt_attr))
     {
      continue;
     }
 
-    /*If requested radiotap header was not available add delimiter and move on */
+    /* if requested radiotap header was not available add delimiter and move on */
     while (rt_attr[rtc] < iterator.this_arg_index)
     {
       rtc++;
-      fprintf(output, "|");
+      output.write("|", 1);
+      //fprintf(output, "|");
     } 
 
     switch (iterator.this_arg_index) 
     {
       case IEEE80211_RADIOTAP_TSFT:
-        fwrite(iterator.this_arg, 1, 8, output); /* TSFT is 64 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 8); /* TSFT is 64 bits */
         break;
       case IEEE80211_RADIOTAP_FLAGS:
         tmp_char = *iterator.this_arg & flags_mask; 
-        fwrite(&tmp_char, 1, 1, output); /* flags is 8 bits */
+        output.write(reinterpret_cast<const char*>(&tmp_char), 1); /* flags is 8 bits */
         break;
       case IEEE80211_RADIOTAP_RATE:
         rt = (uint8_t) *iterator.this_arg; /* in 500kbps */
-        fwrite(iterator.this_arg, 1, 1, output); /* Rate is 8 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 1); /* Rate is 8 bits */
         break;
       case IEEE80211_RADIOTAP_CHANNEL:
-        fwrite(iterator.this_arg, 1, 4, output); /* channel is 32 bits  u16 freq, u16 flags*/
-        break;
-      case IEEE80211_RADIOTAP_FHSS:
-        fwrite(iterator.this_arg, 1, 2, output); /* FHSS is 16 bits u8 hop set, u8 hop pattern*/      
-        break;
-      case IEEE80211_RADIOTAP_DBM_ANTSIGNAL:
-        fwrite(iterator.this_arg, 1, 1, output); /* antisignal is 8 bits */      
-        break;
-      case IEEE80211_RADIOTAP_DBM_ANTNOISE:
-        fwrite(iterator.this_arg, 1, 1, output); /* antinoise is 8 bits*/
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 4); /* channel is 32 bits  u16 freq, u16 flags*/
+        break;      
+        case IEEE80211_RADIOTAP_FHSS:
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 2); /* FHSS is 16 bits u8 hop set, u8 hop pattern*/      
         break;
       case IEEE80211_RADIOTAP_LOCK_QUALITY:
-        fwrite(iterator.this_arg, 1, 2, output); /* Lock Quality is 16 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 2); /* Lock Quality is 16 bits */
         break;
       case IEEE80211_RADIOTAP_TX_ATTENUATION:
-        fwrite(iterator.this_arg, 1, 2, output); /* TX attentuation is 16 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 2); /* TX attentuation is 16 bits */
         break;
       case IEEE80211_RADIOTAP_DB_TX_ATTENUATION:
-        fwrite(iterator.this_arg, 1, 2, output); /* TX db attentuation is 16 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 2); /* TX db attentuation is 16 bits */
         break;
       case IEEE80211_RADIOTAP_DBM_TX_POWER:
-        fwrite(iterator.this_arg, 1, 1, output); /* TX dbm power is 8 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 1); /* TX dbm power is 8 bits */
         break;
       case IEEE80211_RADIOTAP_ANTENNA:
-        fwrite(iterator.this_arg, 1, 1, output); /* Antenna is 8 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 1); /* Antenna is 8 bits */
         break;    
       case IEEE80211_RADIOTAP_DBM_ANTSIGNAL:
-        fwrite(iterator.this_arg, 1, 1, output); /* DBM ANTSIGNAL is 8 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 1); /* DBM ANTSIGNAL is 8 bits */
         break;      
       case IEEE80211_RADIOTAP_DBM_ANTNOISE:
-        fwrite(iterator.this_arg, 1, 1, output); /* DBM ANTINOISE is 8 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 1);  /* DBM ANTNOISE is 8 bits */
         break;
       case IEEE80211_RADIOTAP_RX_FLAGS:
-        fwrite(iterator.this_arg, 1, 2, output); /* RX flags is 16 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 2); /* RX flags is 16 bits */
         break;
       case IEEE80211_RADIOTAP_TX_FLAGS:
-        fwrite(iterator.this_arg, 1, 2, output); /* TX flags is 16 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 2); /* TX flags is 16 bits */
         break;
       case IEEE80211_RADIOTAP_RTS_RETRIES:
-        fwrite(iterator.this_arg, 1, 1, output); /* RTS retries is 8 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 1); /* RTS retries is 8 bits */
         break;
       case IEEE80211_RADIOTAP_DATA_RETRIES:
-        fwrite(iterator.this_arg, 1, 1, output); /* Data retries is 8 bits */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 1); /* Data retries is 8 bits */
         break;
       case IEEE80211_RADIOTAP_MCS:
-        fwrite(iterator.this_arg, 1, 3, output); /* MCS is 24 bits u8 known, u8 flags, u8 mcs */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 3); /* MCS is 24 bits u8 known, u8 flags, u8 mcs */
         break;
       case IEEE80211_RADIOTAP_AMPDU_STATUS:
-        fwrite(iterator.this_arg, 1, 8, output); /* AMPDU status is 64 bits, u32 reference, u16 flag, u8 delimiter, u8 reserved */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 8); /* AMPDU status is 64 bits, u32 reference, u16 flag, u8 delimiter, u8 reserved */
         break;
       case IEEE80211_RADIOTAP_VHT:
-        fwrite(iterator.this_arg, 1, 12, output); /* VHT is 96 bits u16 known, u8 band, u8 mcs_ncss[4], u8 coding, u8 group_id, u16 partial_aid */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 12); /* VHT is 96 bits u16 known, u8 band, u8 mcs_ncss[4], u8 coding, u8 group_id, u16 partial_aid */
         break;
       case IEEE80211_RADIOTAP_TIMESTAMP:
-        fwrite(iterator.this_arg, 1, 12, output); /* timestamp is 96 bits u64 timestamp, u16 accuracy, u8 unit/position, u8 flags */
+        output.write(reinterpret_cast<const char*>(iterator.this_arg), 12); /* timestamp is 96 bits u64 timestamp, u16 accuracy, u8 unit/position, u8 flags */
         break;
       default:
         break;
     }
     rtc++;
-    fprintf(output, "|");  
+    //fprintf(output, "|");
+    output.write("|", 1);
   }
+  while (!ret);
 
   while (rtc++ < rt_attr.size())
   {
-    fprintf(output, "|");
-  }	
+    //fprintf(output, "|");
+    output.write("|", 1);
+  }
 }
