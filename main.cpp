@@ -121,7 +121,7 @@ void Parser::view_output()
         break;
         case 19:
           memcpy(&bf, &line[lc], 3);
-          printf(" MCS vals are %d, %d, and %d", bf[0], bf[1], bf[2]);
+          printf("MCS vals are %d, %d, and %d\n", bf[0], bf[1], bf[2]);
         break;
         default:
         break;
