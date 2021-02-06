@@ -20,7 +20,7 @@ Aletheia is a tool built for distributed low-end robust wireless R&D platforms (
 - g++
 - libpcap-dev
 
-### Live Capture (Please ensure you are running in sudo mode)
+### Live Capture (Please ensure you are running in sudo mode - for monitor mode)
 
 - It is prefer to set radio to monitor mode using the following commands:
 ```
@@ -31,28 +31,31 @@ sudo ifconfig devname up
 where 'devname' is the device's name and can be obtained by running command (iw dev) to get list of all possible devices
 
 - Please ensure name of the device is correctly placed in ADF.txt before running and building the code.
+- Please copy appropriate sample ADF text file (for AR9271 please use ar9207-monitor.txt for this begginning)
 
 To build Aletheia-edge binary and use live-capture mode, please run the following commands:
 ```
-make LIVE_SAE
+make live
 ./aletheia-edge-live
 ```
+
+Leave it running for some time then send signal 'ctrl+C' to process to terminate. The process terminates once it receives a packet after the signal immediately.
 
 ### File Capture (skip if already done live capture instead)
 To process already captured log and generate output.txt with selective filtering. Ensure captured log is in the same directory and named log.pcap, then run the following commands:
 ```
-make FILE_SAE
+make file
 ./aletheia-edge-file
 ```
 
 ### View Output of filtered log (ensure file permissions are set correctly)
 To view log in console to verify its correctness, please run the following commands to build and run the code:
 ```
-make OUTPUT_VIEWER
+make view
 ./aletheia-viewer
 ```
 
-output of captured data is printed on console.
+output of captured data is printed on console terminal.
 
 ## Attribute Definition File (ADF)
 
