@@ -61,20 +61,20 @@ Attribute Definition File consists of 4 main parts: device name, General Attribu
 ### labels allowed within ADF:
 1. *devname* = Device name (string)
 2. *attribute-type*= attribute type (string) -- can be GA, RT, or CA
-    - for GA and CA:
-     - *label* = label of attribute (string)
-     - *key* = character to assosciate with attribute (char) 
-     - *output-format* = representation format (can be hex, string, int)
-     - *size* = size of field for attribute (string converted to integer)
-     - *group*= how many bytes should tool group in representation (e.g., group sequence number by 2 bytes) (string converted to integer)
-     - *location*= start location of attribute within frame (string converted to integer)
-     - *delimiter*= seperator between group of bytes (e.g., ':' for mac-addrress and '.' for IPV4 addresses, etc.)
-     - Only for CA (Conditional attributes)
+    - For GA and CA:
+      - *label* = label of attribute (string)
+      - *key* = character to assosciate with attribute (char) 
+      - *output-format* = representation format (can be hex, string, int)
+      - *size* = size of field for attribute (string converted to integer)
+      - *group*= how many bytes should tool group in representation (e.g., group sequence number by 2 bytes) (string converted to integer)
+      - *location*= start location of attribute within frame (string converted to integer)
+      - *delimiter*= seperator between group of bytes (e.g., ':' for mac-addrress and '.' for IPV4 addresses, etc.)
+      - Only for CA (Conditional attributes)
       - *condition-key*= key of previously defined attribute
       - *value condition should meet* (string converted to byte 0-255) <- repeated x number of times equal to size*grouping of attribute condition must meet
-    - for RT:
-     - *val*= bit of defined radiotap field user is interested in (please refer to http://www.radiotap.org/fields/defined) for full list
-     - NOTE: for bit 1 user has to add masking for flags(e.g., val=1=2) adds interest in radiotap bit 2 (RX_FLAGS) with masking of 0x02 to extract only preamble value
+      - For RT:
+        - *val*= bit of defined radiotap field user is interested in (please refer to http://www.radiotap.org/fields/defined) for full list
+        - NOTE: for bit 1 user has to add masking for flags(e.g., val=1=2) adds interest in radiotap bit 2 (RX_FLAGS) with masking of 0x02 to extract only preamble value
      
 ## Contact Us
 
