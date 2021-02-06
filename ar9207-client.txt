@@ -45,16 +45,4 @@ condition-key=d
 0
 ;
 
-attribute-type=CA
-label=IP-Address-destination
-output-format=int
-key=f
-size=4
-group=1
-location=30
-delimiter=.
-condition-key=d
-8
-0
-;
 
