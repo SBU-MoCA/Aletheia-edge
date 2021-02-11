@@ -19,6 +19,7 @@ Aletheia is a tool built for distributed low-end robust wireless R&D platforms (
 - gcc
 - g++
 - libpcap-dev
+- Boost library
 
 ### Live Capture (Please ensure you are running in sudo mode - for monitor mode)
 
