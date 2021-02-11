@@ -6,7 +6,7 @@ key=b
 output-format=hex
 size=6
 group=1
-location=0
+location=4
 delimiter=:
 ;
 
@@ -17,7 +17,7 @@ output-format=hex
 key=c
 size=6
 group=1
-location=6
+location=10
 delimiter=:
 ;
 

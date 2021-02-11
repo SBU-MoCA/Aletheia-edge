@@ -6,5 +6,5 @@ live:
 	g++ *.cpp *.o -lpcap -DLIVE_SAE -o aletheia-edge-live
 offline:
 	gcc -c *.c -o radio.o
-	g++ *.cpp *.o -lpcap -DLIVE_SAE -o aletheia-edge-file
+	g++ *.cpp *.o -lpcap -DFILE_SAE -o aletheia-edge-file
 

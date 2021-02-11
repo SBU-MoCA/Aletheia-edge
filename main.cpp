@@ -233,7 +233,7 @@ void signalHandler (int signum)
 #if defined(LIVE_SAE) || defined(FILE_SAE)
 void my_callback(u_char *bits, const struct pcap_pkthdr* pkthdr, const u_char* packet)
 {
-  static int count = 1;
+  static int count = 1;  
   struct ieee80211_radiotap_header* rt_hdr;
   struct ieee80211_radiotap_header* rt;
   struct ieee80211_radiotap_iterator iterator;  
@@ -259,7 +259,7 @@ void my_callback(u_char *bits, const struct pcap_pkthdr* pkthdr, const u_char* p
   if (ret != -EINVAL)
   {    
     attc.process_rt(pkthdr, packet, parser.rt_attr, parser.flags_mask, iterator, output);
-    offset = pkthdr->len;
+    offset = rt_hdr->it_len;
   }
     
   attc.process_ga(pkthdr, packet, parser.GA_attributes, offset, output);
@@ -352,14 +352,11 @@ int main(int argc, char *argv[])
       }
       pcap_loop(handle, -1, my_callback,NULL);
     #elif defined(FILE_SAE)
+      cout << "OPENING LOGE" <<endl;
       handle = pcap_open_offline("log.pcap", errbuf);
-      if (handle == NULL) 
-      {
-        cout << "Couldn't open device" << parser.devname << endl;
-        return(2);
-      }
-      pcap_loop(handle, -1, my_callback, NULL);
+      pcap_loop(handle, 0, my_callback, NULL);
     #endif
   #endif
+  printf("DONE\n");
   return(0);
 }
