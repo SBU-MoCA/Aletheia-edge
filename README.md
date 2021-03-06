@@ -87,3 +87,7 @@ Attribute Definition File consists of 4 main parts: device name, General Attribu
 ## Contact Us
 
 For any questions or issues with the system, please contact mohammed.elbadry@stonybrook.edu
+
+## TO DO: 
+
+1. add GZIP compression to log live to compress data further.
