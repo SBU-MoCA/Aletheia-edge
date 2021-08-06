@@ -88,6 +88,12 @@ Attribute Definition File consists of 4 main parts: device name, General Attribu
 
 For any questions or issues with the system, please contact mohammed.elbadry@stonybrook.edu
 
+## Reference
+
+[[PDF]](https://www.petermilder.com/assets/pdf/papers/21icc-aletheia.pdf) Please cite work work while using the system, thank you!
+
+Elbadry, Mohammed, Fan Ye, Peter Milder “Aletheia: A Lightweight Tool for WiFi Medium Analysis on The Edge”, IEEE International Conference on Communications (ICC'21).
+
 ## TO DO: 
 
 1. add GZIP compression to log live to compress data further.
